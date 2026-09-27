@@ -1,5 +1,6 @@
 const form = document.querySelector("#age-form");
 let lastResult = null;
+const historyKey = "age-calculator-history";
 
 function toIsoDate(value) {
   const match = value.trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
@@ -48,6 +49,70 @@ function getDownloadName(name) {
     ? safeName.charAt(0).toUpperCase() + safeName.slice(1)
     : "User";
   return `${displayName}'s age`;
+}
+
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(historyKey) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function renderHistory() {
+  const historyList = document.querySelector("#history-list");
+  const history = getHistory();
+  historyList.innerHTML = "";
+
+  if (!history.length) {
+    historyList.innerHTML = '<p class="history-empty">Your completed calculations will appear here.</p>';
+    return;
+  }
+
+  history.forEach((item, index) => {
+    const row = document.createElement("div");
+    row.className = "history-item";
+    row.dataset.historyIndex = index;
+    row.tabIndex = 0;
+    row.setAttribute("role", "button");
+    const name = document.createElement("strong");
+    name.textContent = item.name || "User";
+    const birth = document.createElement("span");
+    birth.textContent = `Born: ${item.birth_date}`;
+    const end = document.createElement("span");
+    end.textContent = `On: ${item.end_date}`;
+    const age = document.createElement("span");
+    age.className = "history-age";
+    age.textContent = `${item.age.years} years, ${item.age.months} months, ${item.age.days} days`;
+    row.append(name, birth, end, age);
+    historyList.appendChild(row);
+  });
+}
+
+function saveToHistory(result) {
+  const history = getHistory();
+  history.unshift(result);
+  localStorage.setItem(historyKey, JSON.stringify(history.slice(0, 10)));
+  renderHistory();
+}
+
+function displayResult(result) {
+  lastResult = result;
+  document.querySelector("#name").value = result.name || "";
+  document.querySelector("#birth").value = result.birth_date;
+  document.querySelector("#end").value = result.end_date;
+  document.querySelector("#result-heading").textContent =
+    result.name ? `${result.name}'s age` : "User's age";
+  document.querySelector("#years").textContent = result.age.years;
+  document.querySelector("#months").textContent = result.age.months;
+  document.querySelector("#days").textContent = result.age.days;
+  document.querySelector("#born-on").textContent = result.born_on;
+  document.querySelector("#next-birthday").textContent = result.next_birthday;
+  document.querySelector("#birthday-date").textContent = result.birthday_date;
+
+  for (const [key, value] of Object.entries(result.totals)) {
+    document.querySelector(`#total-${key}`).textContent = value.toLocaleString();
+  }
 }
 
 document.querySelectorAll("#birth, #end").forEach((field) => {
@@ -107,20 +172,8 @@ form.addEventListener("submit", async (event) => {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error);
 
-    lastResult = result;
-    document.querySelector("#result-heading").textContent =
-      result.name ? `${result.name}'s age` : "User's age";
-
-    document.querySelector("#years").textContent = result.age.years;
-    document.querySelector("#months").textContent = result.age.months;
-    document.querySelector("#days").textContent = result.age.days;
-    document.querySelector("#born-on").textContent = result.born_on;
-    document.querySelector("#next-birthday").textContent = result.next_birthday;
-    document.querySelector("#birthday-date").textContent = result.birthday_date;
-
-    for (const [key, value] of Object.entries(result.totals)) {
-      document.querySelector(`#total-${key}`).textContent = value.toLocaleString();
-    }
+    saveToHistory(result);
+    displayResult(result);
   } catch (error) {
     status.textContent = error.message || "Could not calculate age.";
   }
@@ -169,3 +222,23 @@ document.querySelector("#clear").addEventListener("click", () => {
   });
   document.querySelector("#status").textContent = "";
 });
+
+document.querySelector("#clear-history").addEventListener("click", () => {
+  localStorage.removeItem(historyKey);
+  renderHistory();
+});
+
+document.querySelector("#history-list").addEventListener("click", (event) => {
+  const item = event.target.closest("[data-history-index]");
+  if (!item) return;
+  displayResult(getHistory()[Number(item.dataset.historyIndex)]);
+  document.querySelector("#result-heading").scrollIntoView({ behavior: "smooth", block: "center" });
+});
+
+document.querySelector("#history-list").addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  event.preventDefault();
+  event.target.click();
+});
+
+renderHistory();
