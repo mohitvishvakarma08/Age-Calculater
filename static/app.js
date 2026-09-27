@@ -44,7 +44,10 @@ function getDownloadName(name) {
     .trim()
     .replace(/[<>:"/\\|?*]/g, "")
     .replace(/[. ]+$/, "");
-  return safeName || "user";
+  const displayName = safeName
+    ? safeName.charAt(0).toUpperCase() + safeName.slice(1)
+    : "User";
+  return `${displayName}'s age`;
 }
 
 document.querySelectorAll("#birth, #end").forEach((field) => {
@@ -106,7 +109,7 @@ form.addEventListener("submit", async (event) => {
 
     lastResult = result;
     document.querySelector("#result-heading").textContent =
-      result.name ? `${result.name}'s age` : "Your age";
+      result.name ? `${result.name}'s age` : "User's age";
 
     document.querySelector("#years").textContent = result.age.years;
     document.querySelector("#months").textContent = result.age.months;
@@ -160,7 +163,7 @@ document.querySelector("#save").addEventListener("click", async () => {
 
 document.querySelector("#clear").addEventListener("click", () => {
   lastResult = null;
-  document.querySelector("#result-heading").textContent = "Your age";
+  document.querySelector("#result-heading").textContent = "User's age";
   document.querySelectorAll(".result-card strong").forEach((item) => {
     item.textContent = "—";
   });

@@ -1,6 +1,7 @@
 from datetime import date
 from io import BytesIO
 import calendar
+import re
 
 from flask import Flask, jsonify, render_template, request, send_file
 
@@ -74,6 +75,9 @@ def calculate_route():
 def export_route():
     data = request.get_json()
     file_type = data.get("type", "txt").lower()
+    entered_name = data.get("name", "").strip()
+    report_name = (entered_name[:1].upper() + entered_name[1:]) if entered_name else "User"
+    report_title = f"{report_name}'s age"
     rows = [
         ("Name", data.get("name") or "—"),
         ("Date of birth", data.get("birth_date", "")),
@@ -83,12 +87,11 @@ def export_route():
         ("Next birthday", data.get("next_birthday", "")),
         ("Birthday date", data.get("birthday_date", "")),
     ]
-    rows.append(("", ""))
-    rows.append(("Total time", ""))
     rows.extend((f"Total {key.title()}", f"{int(value):,}") for key, value in data["totals"].items())
 
     output = BytesIO()
-    filename = "age-calculation"
+    filename = re.sub(r'[<>:"/\\|?*]', "", report_name).rstrip(". ") or "User"
+    filename = f"{filename}'s age"
 
     try:
         if file_type == "txt":
@@ -96,7 +99,7 @@ def export_route():
             result_width = max(len("Result"), *(len(str(value)) for _, value in rows))
             separator = f"+{'-' * (detail_width + 2)}+{'-' * (result_width + 2)}+"
             table_lines = [
-                "AGE CALCULATOR",
+                report_title.upper(),
                 "",
                 separator,
                 f"| {'Details'.ljust(detail_width)} | {'Result'.ljust(result_width)} |",
@@ -122,7 +125,7 @@ def export_route():
         elif file_type == "docx":
             from docx import Document
             document = Document()
-            document.add_heading("Age Calculator", 0)
+            document.add_heading(report_title, 0)
             for key, value in rows:
                 document.add_paragraph(f"{key}: {value}")
             document.save(output)
@@ -148,7 +151,6 @@ def export_route():
                 [Paragraph(str(key), styles["BodyText"]), Paragraph(str(value), styles["BodyText"])]
                 for key, value in rows
             )
-            total_time_row = 1 + next(index for index, row in enumerate(rows) if row == ("Total time", ""))
             table = Table(table_rows, colWidths=[2.1 * inch, 4.8 * inch], repeatRows=1)
             table.setStyle(TableStyle([
                 ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e3a8a")),
@@ -161,13 +163,9 @@ def export_route():
                 ("RIGHTPADDING", (0, 0), (-1, -1), 8),
                 ("TOPPADDING", (0, 0), (-1, -1), 7),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
-                ("SPAN", (0, total_time_row), (1, total_time_row)),
-                ("BACKGROUND", (0, total_time_row), (-1, total_time_row), colors.HexColor("#dbeafe")),
-                ("TEXTCOLOR", (0, total_time_row), (-1, total_time_row), colors.HexColor("#1e3a8a")),
-                ("FONTNAME", (0, total_time_row), (-1, total_time_row), "Helvetica-Bold"),
             ]))
             document.build([
-                Paragraph("Age Calculator", styles["Title"]),
+                Paragraph(report_title, styles["Title"]),
                 Spacer(1, 12),
                 table,
             ])
