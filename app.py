@@ -83,7 +83,9 @@ def export_route():
         ("Next birthday", data.get("next_birthday", "")),
         ("Birthday date", data.get("birthday_date", "")),
     ]
-    rows.extend((f"Total {key}", str(value)) for key, value in data["totals"].items())
+    rows.append(("", ""))
+    rows.append(("Total time", ""))
+    rows.extend((f"Total {key.title()}", f"{int(value):,}") for key, value in data["totals"].items())
 
     output = BytesIO()
     filename = "age-calculation"
@@ -146,6 +148,7 @@ def export_route():
                 [Paragraph(str(key), styles["BodyText"]), Paragraph(str(value), styles["BodyText"])]
                 for key, value in rows
             )
+            total_time_row = 1 + next(index for index, row in enumerate(rows) if row == ("Total time", ""))
             table = Table(table_rows, colWidths=[2.1 * inch, 4.8 * inch], repeatRows=1)
             table.setStyle(TableStyle([
                 ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e3a8a")),
@@ -158,6 +161,10 @@ def export_route():
                 ("RIGHTPADDING", (0, 0), (-1, -1), 8),
                 ("TOPPADDING", (0, 0), (-1, -1), 7),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+                ("SPAN", (0, total_time_row), (1, total_time_row)),
+                ("BACKGROUND", (0, total_time_row), (-1, total_time_row), colors.HexColor("#dbeafe")),
+                ("TEXTCOLOR", (0, total_time_row), (-1, total_time_row), colors.HexColor("#1e3a8a")),
+                ("FONTNAME", (0, total_time_row), (-1, total_time_row), "Helvetica-Bold"),
             ]))
             document.build([
                 Paragraph("Age Calculator", styles["Title"]),
