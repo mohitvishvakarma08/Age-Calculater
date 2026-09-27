@@ -8,13 +8,70 @@ from flask import Flask, jsonify, render_template, request, send_file
 app = Flask(__name__)
 
 
+class AgeGroupKNN:
+    def fit(self, samples, labels):
+        self.samples = samples
+        self.labels = labels
+        return self
+
+    def predict(self, samples):
+        predictions = []
+        for sample in samples:
+            nearest_index = min(
+                range(len(self.samples)),
+                key=lambda index: abs(self.samples[index][0] - sample[0]),
+            )
+            predictions.append(self.labels[nearest_index])
+        return predictions
+
+
+def build_age_group_model():
+    training_ages = [[age] for age in range(0, 121)]
+    training_labels = [
+        "Child" if age <= 12 else
+        "Teenager" if age <= 19 else
+        "Adult" if age <= 59 else
+        "Senior"
+        for age in range(0, 121)
+    ]
+    model = AgeGroupKNN()
+    model.fit(training_ages, training_labels)
+    return model
+
+
+AGE_GROUP_MODEL = build_age_group_model()
+
+
+def predict_age_group(years):
+    return str(AGE_GROUP_MODEL.predict([[years]])[0])
+
+
+def get_request_data():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        raise ValueError("Please provide a JSON object.")
+    return data
+
+
+def parse_iso_date(value, field_name):
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"Please provide a valid {field_name} date.")
+    try:
+        return date.fromisoformat(value)
+    except ValueError as error:
+        raise ValueError(f"Please provide a valid {field_name} date in YYYY-MM-DD format.") from error
+
+
 def calculate(birth, end):
     if end < birth:
         raise ValueError("The calculation date cannot be before the date of birth.")
 
     years = end.year - birth.year
     months = end.month - birth.month
-    days = end.day - birth.day
+    anniversary_day = birth.day
+    if birth.month == 2 and birth.day == 29 and not calendar.isleap(end.year):
+        anniversary_day = 28
+    days = end.day - anniversary_day
 
     if days < 0:
         months -= 1
@@ -27,13 +84,14 @@ def calculate(birth, end):
         months += 12
 
     elapsed_days = (end - birth).days
-    next_year = end.year if (end.month, end.day) < (birth.month, birth.day) else end.year + 1
+    next_year = end.year if (end.month, end.day) < (birth.month, anniversary_day) else end.year + 1
     birthday_day = min(birth.day, calendar.monthrange(next_year, birth.month)[1])
     next_birthday = date(next_year, birth.month, birthday_day)
     days_until = (next_birthday - end).days
 
     return {
         "age": {"years": years, "months": months, "days": days},
+        "age_group": predict_age_group(years),
         "born_on": birth.strftime("%A"),
         "next_birthday": f"{days_until} days",
         "birthday_date": next_birthday.strftime("%B %d, %Y"),
@@ -59,35 +117,64 @@ def index():
 @app.post("/api/calculate")
 def calculate_route():
     try:
-        data = request.get_json()
-        birth = date.fromisoformat(data["birth"])
-        end = date.fromisoformat(data["end"])
+        data = get_request_data()
+        birth = parse_iso_date(data.get("birth"), "birth")
+        end = parse_iso_date(data.get("end"), "calculation")
         result = calculate(birth, end)
-        result["name"] = data.get("name", "").strip()
+        name = data.get("name", "")
+        if not isinstance(name, str):
+            raise ValueError("Name must be text.")
+        result["name"] = name.strip()
         result["birth_date"] = birth.strftime("%d/%m/%Y")
         result["end_date"] = end.strftime("%d/%m/%Y")
         return jsonify(result)
-    except (KeyError, TypeError, ValueError) as error:
-        return jsonify({"error": str(error) or "Please enter valid dates."}), 400
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
 
 
 @app.post("/api/export")
 def export_route():
-    data = request.get_json()
-    file_type = data.get("type", "txt").lower()
-    entered_name = data.get("name", "").strip()
+    try:
+        data = get_request_data()
+        file_type = data.get("type", "txt")
+        if not isinstance(file_type, str):
+            raise ValueError("Export type must be text.")
+        file_type = file_type.lower()
+        if file_type not in {"txt", "xlsx", "docx", "pdf"}:
+            raise ValueError("Unsupported file format.")
+
+        entered_name = data.get("name", "")
+        if not isinstance(entered_name, str):
+            raise ValueError("Name must be text.")
+        entered_name = entered_name.strip()
+        age = data.get("age")
+        totals = data.get("totals")
+        if not isinstance(age, dict) or not all(key in age for key in ("years", "months", "days")):
+            raise ValueError("Calculation age data is incomplete.")
+        if not isinstance(totals, dict) or not all(key in totals for key in ("months", "weeks", "days", "hours", "minutes")):
+            raise ValueError("Calculation totals are incomplete.")
+        if not all(isinstance(age[key], int) and not isinstance(age[key], bool) for key in ("years", "months", "days")):
+            raise ValueError("Calculation age values must be integers.")
+        if not isinstance(data.get("age_group"), str) or not data["age_group"].strip():
+            raise ValueError("Age-group prediction is missing.")
+        if not all(isinstance(totals[key], int) and not isinstance(totals[key], bool) for key in ("months", "weeks", "days", "hours", "minutes")):
+            raise ValueError("Calculation totals must be integers.")
+    except ValueError as error:
+        return jsonify({"error": str(error)}), 400
+
     report_name = (entered_name[:1].upper() + entered_name[1:]) if entered_name else "User"
     report_title = f"{report_name}'s age"
     rows = [
         ("Name", data.get("name") or "—"),
         ("Date of birth", data.get("birth_date", "")),
         ("Calculate age on", data.get("end_date", "")),
-        ("Age", f'{data["age"]["years"]} years, {data["age"]["months"]} months, {data["age"]["days"]} days'),
+        ("Age", f'{age["years"]} years, {age["months"]} months, {age["days"]} days'),
+        ("AI age group", data["age_group"]),
         ("Born on", data.get("born_on", "")),
         ("Next birthday", data.get("next_birthday", "")),
         ("Birthday date", data.get("birthday_date", "")),
     ]
-    rows.extend((f"Total {key.title()}", f"{int(value):,}") for key, value in data["totals"].items())
+    rows.extend((f"Total {key.title()}", f"{int(value):,}") for key, value in totals.items())
 
     output = BytesIO()
     filename = re.sub(r'[<>:"/\\|?*]', "", report_name).rstrip(". ") or "User"

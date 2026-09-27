@@ -83,7 +83,7 @@ function renderHistory() {
     end.textContent = `On: ${item.end_date}`;
     const age = document.createElement("span");
     age.className = "history-age";
-    age.textContent = `${item.age.years} years, ${item.age.months} months, ${item.age.days} days`;
+    age.textContent = `${item.age_group || "Age group unavailable"} | ${item.age.years} years, ${item.age.months} months, ${item.age.days} days`;
     row.append(name, birth, end, age);
     historyList.appendChild(row);
   });
@@ -106,6 +106,7 @@ function displayResult(result) {
   document.querySelector("#years").textContent = result.age.years;
   document.querySelector("#months").textContent = result.age.months;
   document.querySelector("#days").textContent = result.age.days;
+  document.querySelector("#age-group").textContent = result.age_group || "—";
   document.querySelector("#born-on").textContent = result.born_on;
   document.querySelector("#next-birthday").textContent = result.next_birthday;
   document.querySelector("#birthday-date").textContent = result.birthday_date;
@@ -220,6 +221,7 @@ document.querySelector("#clear").addEventListener("click", () => {
   document.querySelectorAll(".result-card strong").forEach((item) => {
     item.textContent = "—";
   });
+  document.querySelector("#age-group").textContent = "—";
   document.querySelector("#status").textContent = "";
 });
 
