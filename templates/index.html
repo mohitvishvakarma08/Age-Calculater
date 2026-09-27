@@ -8,19 +8,26 @@
 </head>
 <body>
   <header class="header">
-    <h1>Age Calculator</h1>
-    <p>Calculate exact age, total time, and next birthday</p>
+    <div class="header-inner">
+      <div class="brand-mark" aria-hidden="true">AC</div>
+      <div>
+        <p class="eyebrow">PERSONAL TIMEKEEPER</p>
+        <h1>Age Calculator</h1>
+        <p>Calculate exact age, total time, and next birthday</p>
+      </div>
+    </div>
   </header>
 
   <main class="container">
     <form id="age-form">
       <section class="card name-card">
-        <label for="name">Name <span>(optional)</span></label>
+        <label for="name">Your name <span>Optional</span></label>
         <input id="name" name="name" placeholder="Enter a name">
       </section>
 
       <div class="date-grid">
         <section class="card">
+          <p class="card-kicker">STARTING POINT</p>
           <h2>Date of birth</h2>
           <div class="date-input">
             <input type="text" id="birth" placeholder="dd/mm/yyyy" inputmode="numeric" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" required>
@@ -29,6 +36,7 @@
           </div>
         </section>
         <section class="card">
+          <p class="card-kicker">REFERENCE DATE</p>
           <h2>Calculate age on</h2>
           <div class="date-input">
             <input type="text" id="end" value="{{ today }}" placeholder="dd/mm/yyyy" inputmode="numeric" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" required>
@@ -42,7 +50,10 @@
         <button type="button" class="button secondary" id="today">Today</button>
       </div>
 
-      <h2 class="section-title" id="result-heading">Your age</h2>
+      <div class="section-heading">
+        <p class="card-kicker">YOUR SNAPSHOT</p>
+        <h2 class="section-title" id="result-heading">Your age</h2>
+      </div>
       <section class="result-grid age-grid">
         <article class="card result-card"><h3>YEARS</h3><strong id="years">—</strong></article>
         <article class="card result-card"><h3>MONTHS</h3><strong id="months">—</strong></article>
@@ -55,7 +66,10 @@
         <article class="card result-card"><h3>Birthday date</h3><strong id="birthday-date">—</strong></article>
       </section>
 
-      <h2 class="total-title">Total time</h2>
+      <div class="section-heading totals-heading">
+        <p class="card-kicker">THE LONG VIEW</p>
+        <h2 class="total-title">Total time</h2>
+      </div>
       <section class="result-grid total-grid">
         <article class="card result-card"><h3>Months</h3><strong id="total-months">—</strong></article>
         <article class="card result-card"><h3>Weeks</h3><strong id="total-weeks">—</strong></article>
