@@ -39,6 +39,14 @@ function formatDate(date) {
   return date.toLocaleDateString("en-GB");
 }
 
+function getDownloadName(name) {
+  const safeName = name
+    .trim()
+    .replace(/[<>:"/\\|?*]/g, "")
+    .replace(/[. ]+$/, "");
+  return safeName || "user";
+}
+
 document.querySelectorAll("#birth, #end").forEach((field) => {
   field.addEventListener("input", () => {
     const digits = field.value.replace(/\D/g, "").slice(0, 8);
@@ -142,7 +150,7 @@ document.querySelector("#save").addEventListener("click", async () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `age-calculation.${document.querySelector("#export-type").value}`;
+    link.download = `${getDownloadName(lastResult.name)}.${document.querySelector("#export-type").value}`;
     link.click();
     URL.revokeObjectURL(url);
   } catch (error) {

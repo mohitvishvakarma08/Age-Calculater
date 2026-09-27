@@ -90,8 +90,22 @@ def export_route():
 
     try:
         if file_type == "txt":
-            output.write("AGE CALCULATOR\n\n".encode())
-            output.write("\n".join(f"{key}: {value}" for key, value in rows).encode())
+            detail_width = max(len("Details"), *(len(str(key)) for key, _ in rows))
+            result_width = max(len("Result"), *(len(str(value)) for _, value in rows))
+            separator = f"+{'-' * (detail_width + 2)}+{'-' * (result_width + 2)}+"
+            table_lines = [
+                "AGE CALCULATOR",
+                "",
+                separator,
+                f"| {'Details'.ljust(detail_width)} | {'Result'.ljust(result_width)} |",
+                separator,
+            ]
+            table_lines.extend(
+                f"| {str(key).ljust(detail_width)} | {str(value).ljust(result_width)} |"
+                for key, value in rows
+            )
+            table_lines.append(separator)
+            output.write("\n".join(table_lines).encode())
             mimetype, extension = "text/plain", "txt"
         elif file_type == "xlsx":
             from openpyxl import Workbook
@@ -112,16 +126,44 @@ def export_route():
             document.save(output)
             mimetype, extension = "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx"
         elif file_type == "pdf":
-            from reportlab.pdfgen import canvas
-            pdf = canvas.Canvas(output)
-            pdf.setFont("Helvetica-Bold", 18)
-            pdf.drawString(50, 790, "Age Calculator")
-            pdf.setFont("Helvetica", 11)
-            y = 750
-            for key, value in rows:
-                pdf.drawString(50, y, f"{key}: {value}")
-                y -= 24
-            pdf.save()
+            from reportlab.lib import colors
+            from reportlab.lib.pagesizes import A4
+            from reportlab.lib.styles import getSampleStyleSheet
+            from reportlab.lib.units import inch
+            from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+            styles = getSampleStyleSheet()
+            document = SimpleDocTemplate(
+                output,
+                pagesize=A4,
+                rightMargin=0.6 * inch,
+                leftMargin=0.6 * inch,
+                topMargin=0.6 * inch,
+                bottomMargin=0.6 * inch,
+            )
+            table_rows = [["Details", "Result"]]
+            table_rows.extend(
+                [Paragraph(str(key), styles["BodyText"]), Paragraph(str(value), styles["BodyText"])]
+                for key, value in rows
+            )
+            table = Table(table_rows, colWidths=[2.1 * inch, 4.8 * inch], repeatRows=1)
+            table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e3a8a")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f1f5f9")]),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ("TOPPADDING", (0, 0), (-1, -1), 7),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+            ]))
+            document.build([
+                Paragraph("Age Calculator", styles["Title"]),
+                Spacer(1, 12),
+                table,
+            ])
             mimetype, extension = "application/pdf", "pdf"
         else:
             return jsonify({"error": "Unsupported file format."}), 400
