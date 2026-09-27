@@ -44,7 +44,10 @@ input { width: 100%; padding: 8px; background: white; }
 .date-grid, .result-grid { display: grid; gap: 12px; }
 .date-grid { grid-template-columns: 1fr 1fr; }
 .date-grid h2 { margin: 0 0 8px; }
-.date-grid input { max-width: 260px; }
+.date-input { position: relative; display: flex; max-width: 260px; }
+.date-input > input:first-child { padding-right: 42px; }
+.date-input input[type="date"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.calendar-button { position: absolute; right: 0; min-height: 40px; padding: 0 10px; border: 0; background: transparent; cursor: pointer; }
 
 .actions { display: flex; justify-content: center; align-items: center; gap: 8px; }
 .actions:not(.button-row) { justify-content: flex-end; margin: 8px 0 10px; }

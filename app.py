@@ -48,7 +48,11 @@ def calculate(birth, end):
 
 @app.route("/")
 def index():
-    return render_template("index.html", today=date.today().isoformat())
+    return render_template(
+        "index.html",
+        today=date.today().strftime("%d/%m/%Y"),
+        today_iso=date.today().isoformat(),
+    )
 
 
 @app.post("/api/calculate")

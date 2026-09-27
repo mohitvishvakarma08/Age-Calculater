@@ -22,11 +22,19 @@
       <div class="date-grid">
         <section class="card">
           <h2>Date of birth</h2>
-          <input type="date" id="birth" required>
+          <div class="date-input">
+            <input type="text" id="birth" placeholder="dd/mm/yyyy" inputmode="numeric" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" required>
+            <input type="date" id="birth-picker" tabindex="-1" aria-hidden="true">
+            <button type="button" class="calendar-button" data-picker="birth-picker" aria-label="Choose date of birth">&#128197;</button>
+          </div>
         </section>
         <section class="card">
           <h2>Calculate age on</h2>
-          <input type="date" id="end" value="{{ today }}" required>
+          <div class="date-input">
+            <input type="text" id="end" value="{{ today }}" placeholder="dd/mm/yyyy" inputmode="numeric" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}" required>
+            <input type="date" id="end-picker" value="{{ today_iso }}" tabindex="-1" aria-hidden="true">
+            <button type="button" class="calendar-button" data-picker="end-picker" aria-label="Choose calculation date">&#128197;</button>
+          </div>
         </section>
       </div>
 
