@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Age Calculator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="header">
+    <h1>Age Calculator</h1>
+    <p>Calculate exact age, total time, and next birthday</p>
+  </header>
+
+  <main class="container">
+    <form id="age-form">
+      <section class="card name-card">
+        <label for="name">Name <span>(optional)</span></label>
+        <input id="name" name="name" placeholder="Enter a name">
+      </section>
+
+      <div class="date-grid">
+        <section class="card">
+          <h2>Date of birth</h2>
+          <input type="date" id="birth" required>
+        </section>
+        <section class="card">
+          <h2>Calculate age on</h2>
+          <input type="date" id="end" value="{{ today }}" required>
+        </section>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="button secondary" id="today">Today</button>
+      </div>
+
+      <h2 class="section-title" id="result-heading">Your age</h2>
+      <section class="result-grid age-grid">
+        <article class="card result-card"><h3>YEARS</h3><strong id="years">—</strong></article>
+        <article class="card result-card"><h3>MONTHS</h3><strong id="months">—</strong></article>
+        <article class="card result-card"><h3>DAYS</h3><strong id="days">—</strong></article>
+      </section>
+
+      <section class="result-grid detail-grid">
+        <article class="card result-card"><h3>Born on</h3><strong id="born-on">—</strong></article>
+        <article class="card result-card"><h3>Next birthday</h3><strong id="next-birthday">—</strong></article>
+        <article class="card result-card"><h3>Birthday date</h3><strong id="birthday-date">—</strong></article>
+      </section>
+
+      <h2 class="total-title">Total time</h2>
+      <section class="result-grid total-grid">
+        <article class="card result-card"><h3>Months</h3><strong id="total-months">—</strong></article>
+        <article class="card result-card"><h3>Weeks</h3><strong id="total-weeks">—</strong></article>
+        <article class="card result-card"><h3>Days</h3><strong id="total-days">—</strong></article>
+        <article class="card result-card"><h3>Hours</h3><strong id="total-hours">—</strong></article>
+        <article class="card result-card"><h3>Minutes</h3><strong id="total-minutes">—</strong></article>
+      </section>
+
+      <p id="status" role="status"></p>
+      <div class="actions button-row">
+        <button class="button primary" type="submit">Calculate age</button>
+        <select id="export-type" aria-label="Export format">
+          <option value="pdf">PDF</option>
+          <option value="xlsx">Excel</option>
+          <option value="docx">Word</option>
+          <option value="txt">Text</option>
+        </select>
+        <button class="button secondary" type="button" id="save">Save result</button>
+        <button class="button secondary" type="reset" id="clear">Clear</button>
+      </div>
+    </form>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
