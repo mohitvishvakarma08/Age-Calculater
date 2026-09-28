@@ -2,10 +2,10 @@
 
 ## Cover Page
 
-**Project:** Age Calculator Web Application  
-**Course:** AIML 
+**Project:** Python Essentials - Evaluated Course Project  
+**Course:** Python Essentials  
 **Student:** Mohit Vishvakarma  
-**Enrollment number:** 26MIM10196
+**Enrollment number:** 26MIM10196  
 **Submission date:** 29/09/2026
 
 ## 1. Introduction
