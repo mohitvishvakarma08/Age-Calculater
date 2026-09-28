@@ -117,13 +117,13 @@ The running interface contains date inputs, age cards, total-time cards, action 
 
 ### Exported reports
 
-![PDF export](screenshots/exported-pdf.png)
+![PDF export](screenshots/pdf-result.png)
 
-![Excel export](screenshots/exported-excel.png)
+![Excel export](screenshots/excel-result.png)
 
-![Word export](screenshots/exported-docs.png)
+![Word export](screenshots/docs-result.png)
 
-![Text table export](screenshots/exported-text.png)
+![Text table export](screenshots/txt-result.png)
 
 ## 11. Testing Approach
 
